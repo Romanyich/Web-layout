@@ -1,6 +1,10 @@
+import { saveItemToLocalStorage } from './localStorage.js'
+import { getRandomId, generateDate } from './generator.js'
+
 const toDos = []
 
-function createPage (toDoItems) {
+/* Root and Page */
+export function createPage(toDosArr) {
     const root = document.getElementById('root')
     root.appendChild(createForm())
 
@@ -8,54 +12,58 @@ function createPage (toDoItems) {
     itemContainer.setAttribute('id', 'item_container')
     root.appendChild(itemContainer)
 
-    toDoItems.forEach((element) => {
+
+    toDos.push(...toDosArr)
+
+    toDosArr.forEach((element) => {
         const item = createItem(element)
         itemContainer.appendChild(item)
     })
 }
 
-getItemsFromLocalStorage()
 
+
+/* Title(form) */
 function createForm() {
     const form = document.createElement('form')
     form.className = 'form'
 
+    /* Delete button */
     const deleteButton = document.createElement('button')
     deleteButton.innerHTML = 'Delete All'
     deleteButton.setAttribute('type', 'reset')
+    /* Delete button event */
     deleteButton.onclick = function() {
         const itemContainer = document.getElementById('item_container')
         itemContainer.innerHTML = ''
 
         toDos.length = 0
-        localStorage.setItem('todos', JSON.stringify(toDos))
+        saveItemToLocalStorage(toDos)
     }
     form.appendChild(deleteButton)
 
+    /* Input */
     const input = document.createElement('input')
     input.setAttribute('type', 'text')
     form.appendChild(input)
 
+    /* Add button */
     const addButton = document.createElement('button')
     addButton.innerHTML = 'Add'
     addButton.setAttribute('type', 'reset')
+    /* Add button event */
     addButton.onclick = function() {
-        let objectDate = new Date()
-        let day = objectDate.getDate()
-        let month = objectDate.getMonth() + 1
-        if (month < 10) {
-            month = '0' + month
-        }
-        const fullDate = day + "." + month
-
         const toDoItem = {
             id: getRandomId(),
             text: input.value.toString(),
-            date: fullDate,
+            date: generateDate(),
             isChecked: false
         }
-        saveItemToLocalStorage(toDoItem)
 
+        toDos.push(toDoItem)
+        saveItemToLocalStorage(toDos)
+
+        /* Item container */
         const newItem = createItem(toDoItem)
         const itemContainer = document.getElementById('item_container')
         itemContainer.appendChild(newItem)
@@ -65,23 +73,25 @@ function createForm() {
     return form
 }
 
+
+
+/* Item */
 function createItem (toDoItem) {
     const item = document.createElement('div')
     item.className = 'item'
 
+    /* Delete local button */
     const itemBottomCross = document.createElement('button')
     itemBottomCross.className = 'item__button-cross'
     itemBottomCross.innerHTML = '&#215;'
+    /* Delete local button event */
     itemBottomCross.onclick = function() {
-        console.log('Delete local')
 
-        /* Delete from arrray */
         const objWithIdIndex = toDos.findIndex((obj) => obj.id === toDoItem.id)
         if (objWithIdIndex > -1) {
             toDos.splice(objWithIdIndex, 1)
         }
 
-        /* Save updated array to Local Storage */
         localStorage.setItem('todos', JSON.stringify(toDos))
 
         const itemContainer = document.getElementById('item_container')
@@ -89,36 +99,30 @@ function createItem (toDoItem) {
     }
     item.appendChild(itemBottomCross)
 
+    /* Check button */
     const itemBottomMark = document.createElement('button')
     itemBottomMark.className = 'item__button-mark'
     itemBottomMark.innerHTML = '&#10003;'
+    /* Check button event */
     itemBottomMark.onclick = function() {
-        console.log('Modify CSS')
-
         const objWithIdIndex = toDos.findIndex((obj) => obj.id === toDoItem.id)
         toDos[objWithIdIndex].isChecked = !toDoItem.isChecked
         localStorage.setItem('todos', JSON.stringify(toDos))
 
         if (itemText.className === 'item__text-modified') {
-            console.log('White text')
             itemText.className = 'item__text'
         } else {
-            console.log('Red text and crossed')
             itemText.className = 'item__text-modified'
         }
     }
     item.appendChild(itemBottomMark)
 
     const itemText = document.createElement('p')
-
     if (!toDoItem.isChecked) {
-        console.log('White text')
         itemText.className = 'item__text'
     } else {
-        console.log('Red text and crossed')
         itemText.className = 'item__text-modified'
     }
-
     itemText.setAttribute('id', 'item_text')
     itemText.innerHTML = toDoItem.text
     item.appendChild(itemText)
@@ -127,32 +131,6 @@ function createItem (toDoItem) {
     itemDate.className = 'item__date'
     itemDate.innerHTML = toDoItem.date
     item.appendChild(itemDate)
-
-    console.log('Text: ' + toDoItem.text + ', date: ' + toDoItem.date)
  
     return item
-}
-
-function getRandomId() {
-    const randomID = Math.floor(Math.random() * Date.now()).toString(16)
-    console.log(randomID)
-    return randomID
-}
-
-function saveItemToLocalStorage(toDoItem) {
-    console.log("Text: " + toDoItem.text)
-    toDos.push(toDoItem)
-    console.log('All card: ' + toDos)
-    localStorage.setItem('todos', JSON.stringify(toDos))
-}
-
-function getItemsFromLocalStorage() {
-    console.log('Restore from Local Storage')
-    let row = localStorage.getItem('todos')
-    const localStorageToDos = JSON.parse(row)
-    localStorageToDos.forEach((element) => {
-        toDos.push(element)
-    })
-    console.log(toDos)
-    createPage(toDos)
 }
